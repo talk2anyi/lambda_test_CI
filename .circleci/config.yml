@@ -20,7 +20,7 @@ executors:
       resource_class: arm.medium
     test_machine_2:
       docker:
-      - image: cimg/base:current #cimg/python:3.10
+      - image: cimg/base:2023.10 #cimg/python:3.10
       #- image: amazon/aws-lambda-python:3.10
       resource_class: small
 
@@ -30,6 +30,8 @@ commands:
       - run:
           name: Check docker versions
           command: |
+            sudo systemctl status docker
+            sudo systemctl start docker
             docker -v
             docker compose -v
 
@@ -73,17 +75,18 @@ jobs:
     steps:
       - shallow-checkout/checkout
       - setup_remote_docker:
-          docker_layer_caching: true
-      - check_docker_versions   
+          docker_layer_caching: true  
 
       - install_aws_cli
-
-      - whats_running
 
       - run:
           name: Login to ECR
           command: |
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
+
+      - check_docker_versions 
+
+      - whats_running
 
       - run:
           name: Build Lambda Docker Image

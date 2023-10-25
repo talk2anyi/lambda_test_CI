@@ -20,7 +20,7 @@ executors:
       resource_class: arm.medium
     test_machine_2:
       docker:
-      - image: amazonlinux:2 #cimg/base:2023.10 #cimg/python:3.10
+      - image: cimg/base:2023.10 #cimg/python:3.10
       #- image: amazon/aws-lambda-python:3.10
       resource_class: small
 

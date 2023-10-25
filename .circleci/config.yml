@@ -20,7 +20,7 @@ executors:
       resource_class: arm.medium
     test_machine_2:
       docker:
-      - image: amazonlinux:2 #cimg/python:3.10
+      - image: cimg/base:current #cimg/python:3.10
       #- image: amazon/aws-lambda-python:3.10
       resource_class: small
 
@@ -32,6 +32,12 @@ commands:
           command: |
             docker -v
             docker compose -v
+
+  whats_running:
+    steps:
+      - run:
+          name: What's running?
+          command: docker ps
 
   install_aws_cli:
     steps:
@@ -68,8 +74,11 @@ jobs:
       - shallow-checkout/checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - check_docker_versions
+      - check_docker_versions   
+
       - install_aws_cli
+
+      - whats_running
 
       - run:
           name: Login to ECR

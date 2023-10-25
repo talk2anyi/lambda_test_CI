@@ -1,0 +1,13 @@
+FROM amazon/aws-lambda-python:3.10
+
+# Copy code folder to /var/task
+COPY . ${LAMBDA_TASK_ROOT}
+
+# Install dependencies
+COPY requirements.txt  .
+RUN pip install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+COPY --from=public.ecr.aws/datadog/lambda-extension:latest /opt/extensions/ /opt/extensions
+
+ENV PYTHONPATH PYTHONPATH:${LAMBDA_TASK_ROOT}/src
+
+CMD ["datadog_lambda.handler.handler"]

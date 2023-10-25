@@ -1,0 +1,33 @@
+version: '3'
+services:
+
+  lambda_collator:
+    build:
+      context: .
+      args:
+          GITHUB_AUTH_TOKEN:
+    image: lambda_collator
+    container_name: collator_lambda
+    volumes:
+      - .:/collator
+    environment:
+      S3_BUCKET: branch-co
+      S3_ENDPOINT: http://aws:4566
+      AWS_REGION: us-west-2
+      AWS_ACCESS_KEY_ID: foo
+      AWS_SECRET_ACCESS_KEY: bar
+
+  aws:
+    build: ../test/docker/aws
+    image: ml_aws
+    container_name: collator_aws
+    ports:
+      - "9002:4566" # S3
+    volumes:
+      - ../test/docker/aws:/aws
+    environment:
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_ACCESS_KEY_ID: foo
+      AWS_SECRET_ACCESS_KEY: bar
+      S3_BUCKET: branch-co
+      SETUP_DELAY_SEC: 10

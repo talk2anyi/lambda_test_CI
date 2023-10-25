@@ -25,13 +25,19 @@ executors:
       resource_class: small
 
 commands:
+  start_docker:
+    steps:
+      - run:
+          name: Start docker engine
+          command: |
+            sudo systemctl status docker
+            sudo systemctl start docker
+
   check_docker_versions:
     steps:
       - run:
           name: Check docker versions
           command: |
-            sudo systemctl status docker
-            sudo systemctl start docker
             docker -v
             docker compose -v
 
@@ -78,6 +84,8 @@ jobs:
           docker_layer_caching: true  
 
       - install_aws_cli
+
+      - start_docker
 
       - run:
           name: Login to ECR

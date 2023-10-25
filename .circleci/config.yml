@@ -30,23 +30,25 @@ commands:
       - run:
           name: Start docker engine
           command: |
-            sudo systemctl status docker
-            sudo systemctl start docker
+            sudo usermod -aG docker $USER
             sudo chmod 666 /var/run/docker.sock
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            
 
   check_docker_versions:
     steps:
       - run:
           name: Check docker versions
           command: |
-            docker -v
-            docker compose -v
+            sudo docker -v
+            sudo docker compose -v
 
   whats_running:
     steps:
       - run:
           name: What's running?
-          command: docker ps
+          command: sudo docker ps
 
   install_aws_cli:
     steps:

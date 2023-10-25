@@ -21,7 +21,7 @@ executors:
     test_machine_2:
       docker:
       #- image: cimg/python:3.10
-      - image: collator/Dockerfile-US
+      - image: amazon/aws-lambda-python:3.10
       resource_class: small
 
 commands:

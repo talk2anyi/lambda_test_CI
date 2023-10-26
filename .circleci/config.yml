@@ -25,15 +25,15 @@ executors:
       resource_class: small
 
 commands:
-  start_docker:
-    steps:
-      - run:
-          name: Start docker engine
-          command: |
-            sudo usermod -aG docker circleci_deploy
-            sudo chmod 666 /var/run/docker.sock
-            sudo systemctl restart docker 
-            sudo systemctl enable docker
+  #start_docker:
+  #  steps:
+  #    - run:
+  #        name: Start docker engine
+  #        command: |
+  #          sudo usermod -aG docker circleci_deploy
+  #          sudo chmod 666 /var/run/docker.sock
+  #          sudo systemctl restart docker 
+  #          sudo systemctl enable docker
             
 
   check_docker_versions:
@@ -83,20 +83,22 @@ jobs:
 
     steps:
       - shallow-checkout/checkout
-      - setup_remote_docker: 
-          docker_layer_caching: true  
+      #- setup_remote_docker: 
+      #    docker_layer_caching: true  
 
       - install_aws_cli
-
-      - start_docker
 
       - run:
           name: Login to ECR
           command: |
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
-
+      
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      #- start_docker
       - check_docker_versions 
-
       - whats_running
 
       - run:

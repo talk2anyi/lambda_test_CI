@@ -30,9 +30,9 @@ commands:
       - run:
           name: Start docker engine
           command: |
-            sudo usermod -aG docker $USER
+            sudo usermod -aG docker ubuntu
             sudo chmod 666 /var/run/docker.sock
-            sudo systemctl start docker
+            sudo systemctl start docker 
             sudo systemctl enable docker
             
 

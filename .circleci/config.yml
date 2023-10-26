@@ -30,9 +30,9 @@ commands:
       - run:
           name: Start docker engine
           command: |
-            sudo usermod -aG docker ubuntu
+            sudo usermod -aG docker circleci_deploy
             sudo chmod 666 /var/run/docker.sock
-            sudo systemctl start docker 
+            sudo systemctl restart docker 
             sudo systemctl enable docker
             
 

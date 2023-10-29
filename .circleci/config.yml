@@ -96,8 +96,6 @@ jobs:
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN
 
-
-
 workflows:
   build-deploy:
     jobs:

@@ -20,6 +20,7 @@ executors:
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         region: us-east-1
         AWS_REGION: us-east-1
+        IMAGE_VERSION: 2023-10-25
 
 
 commands:
@@ -88,6 +89,11 @@ jobs:
             docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
             sleep 2m
 
+      - run:
+          name: Push Image to ECR
+          command: |
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64      
+
   deploy:
     executor: test_machine_2
     steps:
@@ -102,12 +108,12 @@ jobs:
       - run:
           name: Log In to ECR
           command: |
-            aws ecr get-login-password --region $region | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$region.amazonaws.com            
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
 
       - run:
           name: Push Image to ECR
           command: |
-            docker push 481233474772.dkr.ecr.$region.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
 
       - run:
           name: Update AWS Lambda Function

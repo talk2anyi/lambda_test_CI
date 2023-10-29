@@ -72,7 +72,20 @@ jobs:
             IMAGE_VERSION='2023-10-25'
           
             docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
-    
+
+  deploy:
+    executor: test_machine_2
+    working_directory: ~/project
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      - check_docker_versions 
+      - whats_running
+      - install_aws_cli
+
       - run:
           name: Login to ECR
           command: |
@@ -104,7 +117,14 @@ workflows:
             branches:
               only:
                 - main
-
+      - deploy:
+          type: approval
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - main     
 
 
 

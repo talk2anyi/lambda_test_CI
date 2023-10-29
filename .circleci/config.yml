@@ -7,7 +7,7 @@ orbs:
   shallow-checkout: datacamp/shallow-checkout@0.0.3
   # Third party orb: https://circleci.com/developer/orbs/orb/circleci/aws-ecr
   # (append ?version=8.2.1 to URL to view this version)
-  aws-ecr: circleci/aws-ecr@8.2.1
+  #aws-ecr: circleci/aws-ecr@9.0.1
 
 executors:
     test_machine_2:
@@ -52,27 +52,9 @@ commands:
             sudo ./aws/install
 
 jobs:
-  collator_image_build_us:
+  build:
     executor: test_machine_2
-    steps:
-      - shallow-checkout/checkout
-      - aws-ecr/build-and-push-image:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          create-repo: false
-          dockerfile: ./collator/Dockerfile-US
-          path: .
-          platform: linux/amd64
-          region: "${AWS_US_EAST_REGION}"
-          registry-id: AWS_ECR_REGISTRY_ID
-          repo: lambda_images
-          tag: "${CIRCLE_SHA1}"
-
-  collator_us_staging:
-    executor: test_machine_2
-
     working_directory: ~/project
-
     steps:
       - shallow-checkout/checkout
       - setup_remote_docker:
@@ -89,8 +71,17 @@ jobs:
             AWS_REGION='us-east-1'
             IMAGE_VERSION='2023-10-25'
           
-            docker build --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 .
-
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 .
+  
+  deploy:
+    executor: test_machine_2
+    working_directory: ~/project
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+    
       - run:
           name: Login to ECR
           command: |
@@ -117,24 +108,17 @@ jobs:
 
 
 workflows:
-  version: 2
-  deploys:
+  build-deploy:
       jobs:
-        - collator_image_build_us
-        - collator_us_staging:
+        - build
+        - deploy:
             requires:
-              - collator_image_build_us
+              - build
             filters:
               branches:
                 only:
                   - main
             
-        - collator_us_staging:
-            requires:
-              - collator_image_build_us           
-            filters:
-              branches:
-                only:
-                  - main
+
 
 

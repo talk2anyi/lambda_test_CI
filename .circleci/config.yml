@@ -75,15 +75,12 @@ jobs:
 
   deploy:
     executor: test_machine_2
-    working_directory: ~/project
     steps:
       - shallow-checkout/checkout
       - setup_remote_docker:
           version: 20.10.24
           docker_layer_caching: true  
       
-      - check_docker_versions 
-      - whats_running
       - install_aws_cli
 
       - run:
@@ -113,7 +110,12 @@ jobs:
 workflows:
   build-deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - main 
+                      
       - deploy:
           type: approval
           requires:

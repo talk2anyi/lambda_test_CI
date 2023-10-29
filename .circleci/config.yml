@@ -73,10 +73,10 @@ jobs:
           version: 20.10.24
           docker_layer_caching: true  
       
-      - login_to_ecr
       - check_docker_versions 
       - whats_running
       - install_aws_cli
+      - login_to_ecr
 
       - run:
           name: Build Lambda Docker Image

@@ -15,6 +15,11 @@ executors:
       - image: cimg/base:2023.10 #cimg/python:3.10
       #- image: amazon/aws-lambda-python:3.10
       resource_class: small
+      environment:
+        aws-access-key-id: AWS_ACCESS_KEY_ID
+        aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
+        region: us-east-1
+
 
 commands:
   #start_docker:
@@ -42,6 +47,13 @@ commands:
           name: What's running?
           command: docker ps
 
+  login_to_ecr:
+    steps:
+      - run:
+          name: ECR Login
+          command: aws ecr get-login-password --region $region | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$region.amazonaws.com            
+
+
   install_aws_cli:
     steps:
       - run:
@@ -61,6 +73,7 @@ jobs:
           version: 20.10.24
           docker_layer_caching: true  
       
+      - login_to_ecr
       - check_docker_versions 
       - whats_running
       - install_aws_cli
@@ -68,10 +81,11 @@ jobs:
       - run:
           name: Build Lambda Docker Image
           command: |
-            AWS_REGION='us-east-1'
+            #AWS_REGION='us-east-1'
             IMAGE_VERSION='2023-10-25'
           
-            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$region.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
+            sleep 2m
 
   deploy:
     executor: test_machine_2
@@ -81,18 +95,18 @@ jobs:
           version: 20.10.24
           docker_layer_caching: true  
       
+      - login_to_ecr
       - install_aws_cli
 
       - run:
-          name: Push Image
+          name: Log In to ECR
           command: |
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
-            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
+            aws ecr get-login-password --region $region | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$region.amazonaws.com            
 
-      #- run:
-      #    name: Push Image to ECR
-      #    command: |
-      #      docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
+      - run:
+          name: Push Image to ECR
+          command: |
+            docker push 481233474772.dkr.ecr.$region.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
 
       - run:
           name: Update AWS Lambda Function
@@ -107,24 +121,18 @@ jobs:
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN
 
+   
 workflows:
   build-deploy:
     jobs:
-      - build:
-          filters:
-            branches:
-              only:
-                - main 
-                      
+      - build
       - deploy:
-          type: approval
           requires:
             - build
           filters:
             branches:
               only:
-                - main     
-
+                - main
 
 
 

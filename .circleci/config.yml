@@ -19,8 +19,8 @@ executors:
         aws-access-key-id: AWS_ACCESS_KEY_ID
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
-        IMAGE_VERSION: 2023-10-27
-        IMAGE_URI: 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+        IMAGE_VERSION: 2023-10-28
+        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-10-28-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
 
 

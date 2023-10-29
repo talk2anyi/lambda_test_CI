@@ -1,9 +1,6 @@
 # Build settings for Circle CI
 version: 2.1
 
-# Environment variables are defined in CircleCI project settings:
-# https://app.circleci.com/settings/project/github/BranchIntl/Branch_Python_ML/environment-variables
-
 orbs:
   # Third party orb: https://circleci.com/orbs/registry/orb/datacamp/shallow-checkout
   # (append ?version=0.0.3 to URL to view this version)
@@ -13,11 +10,6 @@ orbs:
   aws-ecr: circleci/aws-ecr@8.2.1
 
 executors:
-    build_machine:
-      machine:
-        image: ubuntu-2204:2023.04.2
-        docker_layer_caching: true
-      resource_class: arm.medium
     test_machine_2:
       docker:
       - image: cimg/base:2023.10 #cimg/python:3.10
@@ -41,14 +33,14 @@ commands:
       - run:
           name: Check docker versions
           command: |
-            sudo docker -v
-            sudo docker compose -v
+            docker -v
+            docker compose -v
 
   whats_running:
     steps:
       - run:
           name: What's running?
-          command: sudo docker ps
+          command: docker ps
 
   install_aws_cli:
     steps:
@@ -83,23 +75,13 @@ jobs:
 
     steps:
       - shallow-checkout/checkout
-      #- setup_remote_docker: 
-      #    docker_layer_caching: true  
-
-      - install_aws_cli
-
-      - run:
-          name: Login to ECR
-          command: |
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
-      
       - setup_remote_docker:
           version: 20.10.24
           docker_layer_caching: true  
       
-      #- start_docker
       - check_docker_versions 
       - whats_running
+      - install_aws_cli
 
       - run:
           name: Build Lambda Docker Image
@@ -108,6 +90,11 @@ jobs:
             IMAGE_VERSION='2023-10-25'
           
             docker build --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 .
+
+      - run:
+          name: Login to ECR
+          command: |
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
 
       - run:
           name: Push Image to ECR
@@ -134,19 +121,20 @@ workflows:
   deploys:
       jobs:
         - collator_image_build_us
-        - collator_us_staging_approval:
-            type: approval
-            filters:
-              branches:
-                only:
-                  - main
+        - collator_us_staging:
             requires:
               - collator_image_build_us
-
-        - collator_us_staging:
             filters:
               branches:
                 only:
                   - main
+            
+        - collator_us_staging:
             requires:
-              - collator_us_staging_approval
+              - collator_image_build_us           
+            filters:
+              branches:
+                only:
+                  - main
+
+

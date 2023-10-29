@@ -20,7 +20,9 @@ executors:
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         region: us-east-1
         AWS_REGION: us-east-1
-        IMAGE_VERSION: 2023-10-25
+        IMAGE_VERSION: 2023-10-26
+        IMAGE_URI: 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+        IAM_ROLE_ARN: arn:aws:iam::481233474772:user/circleci_deploy
 
 
 commands:
@@ -83,16 +85,30 @@ jobs:
       - run:
           name: Build Lambda Docker Image
           command: |
-            AWS_REGION='us-east-1'
-            IMAGE_VERSION='2023-10-25'
+            # AWS_REGION='us-east-1'
+            # IMAGE_VERSION='2023-10-25'
           
             docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
-            sleep 2m
+            # sleep 2m
 
       - run:
           name: Push Image to ECR
           command: |
             docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64      
+
+      - run:
+          name: Update AWS Lambda Function
+          command: |
+            # AWS_REGION='us-east-1'
+            # IMAGE_URI=481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+            # IAM_ROLE_ARN=arn:aws:iam::481233474772:user/circleci_deploy
+          
+            aws lambda create-function \
+              --function-name s3_log_collation_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN
+      
 
   deploy:
     executor: test_machine_2

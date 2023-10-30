@@ -7,20 +7,20 @@ orbs:
   shallow-checkout: datacamp/shallow-checkout@0.0.3
   # Third party orb: https://circleci.com/developer/orbs/orb/circleci/aws-ecr
   # (append ?version=8.2.1 to URL to view this version)
-  aws-ecr: circleci/aws-ecr@8.2.1
+  # aws-ecr: circleci/aws-ecr@8.2.1
 
 executors:
     lambda-executor:
       docker:
-      - image: cimg/base:2023.10 #cimg/python:3.10
+      - image: cimg/python:3.10 #cimg/base:2023.10 
       #- image: amazon/aws-lambda-python:3.10
       resource_class: small
       environment:
         aws-access-key-id: AWS_ACCESS_KEY_ID
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
-        IMAGE_VERSION: 2023-10-29
-        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-10-28-amd64 
+        IMAGE_VERSION: 2023-10-30
+        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-10-30-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
 
 
@@ -69,19 +69,46 @@ commands:
 jobs:
   build:
     executor: lambda-executor
+    working_directory: ~/project
     steps:
       - shallow-checkout/checkout
-      - aws-ecr/build-and-push-image:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          create-repo: false
-          dockerfile: ./collator/Dockerfile-US
-          path: .
-          platform: linux/amd64
-          region: "${AWS_US_EAST_REGION}"
-          registry-id: AWS_ECR_REGISTRY_ID
-          repo: lambda_images
-          tag: "${IMAGE_VERSION}-amd64"
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      - check_docker_versions 
+      - whats_running
+      - install_aws_cli
+      - login_to_ecr
+
+      - run:
+          name: Build Lambda Docker Image
+          command: |
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
+          
+
+      - run:
+          name: Push Image to ECR
+          command: |
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64      
+
+      - run:
+          name: Update AWS Lambda Function
+          command: |
+            # AWS_REGION='us-east-1'
+            # IMAGE_URI=481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+            # IAM_ROLE_ARN=arn:aws:iam::481233474772:role/test_lambda_role
+            echo "AWS_REGION: $AWS_REGION"
+            echo "IMAGE_URI: $IMAGE_URI"
+
+            aws lambda update-function-code \
+              --function-name s3_log_collation_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN \
+              --publish true \
+              --version 1 \
+              --memory-size 4096
 
   deploy:
     executor: lambda-executor
@@ -111,14 +138,12 @@ jobs:
             IMAGE_URI=481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
             IAM_ROLE_ARN=arn:aws:iam::481233474772:user/circleci_deploy
           
-            aws lambda update-function-code \
+            aws lambda create-function \
               --function-name s3_log_collation_v2_test \
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
-              --memory-size 4096 \
-              --publish true \
-              --version 1 \
-              --role $IAM_ROLE_ARN 
+              --role $IAM_ROLE_ARN \
+              --memory-size 4096
               
               
                          
@@ -126,7 +151,12 @@ jobs:
 workflows:
   build-deploy:
     jobs:
-      - build
+      - build:
+          type: approval
+          filters:
+            branches:
+              only:
+                - main
       - deploy:
           type: approval
           requires:

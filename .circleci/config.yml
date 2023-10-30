@@ -151,12 +151,7 @@ jobs:
 workflows:
   build-deploy:
     jobs:
-      - build:
-          type: approval
-          filters:
-            branches:
-              only:
-                - main
+      - build
       - deploy:
           type: approval
           requires:

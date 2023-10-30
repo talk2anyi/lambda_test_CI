@@ -10,7 +10,7 @@ orbs:
   #aws-ecr: circleci/aws-ecr@9.0.1
 
 executors:
-    test_machine_2:
+    lambda-executor:
       docker:
       - image: cimg/base:2023.10 #cimg/python:3.10
       #- image: amazon/aws-lambda-python:3.10
@@ -68,7 +68,7 @@ commands:
 
 jobs:
   build:
-    executor: test_machine_2
+    executor: lambda-executor
     working_directory: ~/project
     steps:
       - shallow-checkout/checkout
@@ -88,7 +88,7 @@ jobs:
             # IMAGE_VERSION='2023-10-25'
           
             docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
-            # sleep 2m
+          
 
       - run:
           name: Push Image to ECR
@@ -104,15 +104,21 @@ jobs:
             echo "AWS_REGION: $AWS_REGION"
             echo "IMAGE_URI: $IMAGE_URI"
 
-            aws lambda create-function \
+            aws lambda update-function-code \
               --function-name s3_log_collation_v2_test \
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
-              --role $IAM_ROLE_ARN
+              --role $IAM_ROLE_ARN \
+              --version 1 \
+              --publish true \
+              --memory-size 4096
+            
+            sleep 1m
+
       
 
   deploy:
-    executor: test_machine_2
+    executor: lambda-executor
     steps:
       - shallow-checkout/checkout
       - setup_remote_docker:
@@ -143,7 +149,8 @@ jobs:
               --function-name s3_log_collation_v2_test \
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
-              --role $IAM_ROLE_ARN
+              --role $IAM_ROLE_ARN \
+              --memory-size 4096
 
    
 workflows:

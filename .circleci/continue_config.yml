@@ -88,6 +88,18 @@ jobs:
           command: |
             docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
 
+      - run:
+          name: Update AWS Lambda Function
+          command: |
+            aws lambda create-function \
+              --function-name s3_log_collation_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN \
+              --publish true \
+              --version 1 \              
+              --memory-size 4096      
+
 
   collator_deploy:
     executor: lambda-executor

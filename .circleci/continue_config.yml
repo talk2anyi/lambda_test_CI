@@ -25,17 +25,6 @@ executors:
 
 
 commands:
-  #start_docker:
-  #  steps:
-  #    - run:
-  #        name: Start docker engine
-  #        command: |
-  #          sudo usermod -aG docker circleci_deploy
-  #          sudo chmod 666 /var/run/docker.sock
-  #          sudo systemctl restart docker 
-  #          sudo systemctl enable docker
-            
-
   check_docker_versions:
     steps:
       - run:

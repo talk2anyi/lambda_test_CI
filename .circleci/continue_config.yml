@@ -96,11 +96,11 @@ jobs:
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN \
-              --publish true \
-              --function-version 1 \
-              --name DEV \
+              # --publish true \
+              # --function-version 1 \
+              # --name DEV \
               --description "collator lambda function" \             
-              --memory-size 512      
+              # --memory-size 512      
 
 
   collator_deploy:
@@ -120,13 +120,13 @@ jobs:
             aws lambda create-function \
               --function-name s3_log_collation_v3_test \
               --package-type Image \
-              --code ImageUri=$IMAGE_URI \
-              --role $IAM_ROLE_ARN \
-              --publish true \
-              --function-version 1 \
-              --name DEV \
+              --code ImageUri=481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_2-amd64 \
+              --role arn:aws:iam::481233474772:role/test_lambda_role \
+              # --publish true \
+              # --function-version 1 \
+              # --name DEV \
               --description "collator lambda function" \             
-              --memory-size 512   
+              # --memory-size 512    
 
   jenkins_build:
     executor: lambda-executor

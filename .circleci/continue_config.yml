@@ -189,6 +189,7 @@ jobs:
    
 workflows:
   collator_job:
+    when: << pipeline.parameters.collator_job >>
     jobs:
       - collator_build
       - collator_deploy:
@@ -197,6 +198,7 @@ workflows:
            - collator_build
   
   jenkins_job:
+    when: << pipeline.parameters.jenkins_job >>
     jobs:
       - jenkins_build
       - jenkins_deploy:

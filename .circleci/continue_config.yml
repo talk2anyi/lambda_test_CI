@@ -116,6 +116,8 @@ jobs:
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN \
+              --publish true \
+              --version 1 \              
               --memory-size 4096
 
   jenkins_build:

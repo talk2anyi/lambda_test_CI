@@ -97,8 +97,10 @@ jobs:
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN \
               --publish true \
-              --version 1               
-              # --memory-size 4096      
+              --function-version 1 \
+              --name DEV \
+              --description "collator lambda function" \             
+              --memory-size 512      
 
 
   collator_deploy:
@@ -110,18 +112,21 @@ jobs:
           docker_layer_caching: true  
 
       - install_aws_cli
+      - login_to_ecr
 
       - run:
           name: Update AWS Lambda Function
           command: |
             aws lambda create-function \
-              --function-name s3_log_collation_v2_test \
+              --function-name s3_log_collation_v3_test \
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN \
               --publish true \
-              --version 1 \              
-              --memory-size 4096
+              --function-version 1 \
+              --name DEV \
+              --description "collator lambda function" \             
+              --memory-size 512   
 
   jenkins_build:
     executor: lambda-executor

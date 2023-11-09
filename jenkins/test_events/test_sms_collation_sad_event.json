@@ -1,0 +1,38 @@
+{
+    "Records": [
+	     {
+	        "eventVersion": "2.0",
+	        "eventTime": "2017-01-24T14:09:51.064Z",
+	        "requestParameters": {
+            "sourceIPAddress": "197.181.138.102"
+          },
+          "s3": {
+		          "configurationId": "e7ab7037-9f07-4c72-8017-4367d9a20371",
+	            "object": {
+		              "eTag": "91d9c7e98a1010490e12db96287b2669",
+	                "sequencer": "005887602F06913311",
+	                "key": "uploads/users/100/1/1/sms_log/raw_collator_sad_path.txt",
+	                "size": 16728
+              },
+	            "bucket": {
+                  "arn": "arn:aws:s3:::branch-co",
+                  "name": "branch-co",
+	                "ownerIdentity": {
+			                 "principalId": "AT3OB9TDHB4UI"
+                  }
+              },
+              "s3SchemaVersion": "1.0"
+         },
+         "responseElements": {
+		         "x-amz-id-2": "jrH5n2ffBYg1RBKH7xQhv0rX34GecAyfeSVHZ/MNOzgphbNM63Rilcat9J/MElU4j3M5uMV1ns4=",
+	           "x-amz-request-id": "1F231A02494F105D"
+         },
+         "awsRegion": "us-west-2",
+         "eventName": "ObjectCreated:Put",
+         "userIdentity": {
+		         "principalId": "AWS:AIDAI7PGYEDZY3RV5AAF6"
+         },
+         "eventSource": "aws:s3"
+       }
+    ]
+}

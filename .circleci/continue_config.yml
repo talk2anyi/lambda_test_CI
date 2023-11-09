@@ -1,0 +1,210 @@
+# Build settings for Circle CI
+version: 2.1
+
+orbs:
+  # Third party orb: https://circleci.com/orbs/registry/orb/datacamp/shallow-checkout
+  # (append ?version=0.0.3 to URL to view this version)
+  shallow-checkout: datacamp/shallow-checkout@0.0.3
+  # Third party orb: https://circleci.com/developer/orbs/orb/circleci/aws-ecr
+  # (append ?version=8.2.1 to URL to view this version)
+  # aws-ecr: circleci/aws-ecr@8.2.1
+
+executors:
+    lambda-executor:
+      docker:
+      - image: cimg/base:2023.10  #cimg/python:3.10 
+      #- image: amazon/aws-lambda-python:3.10
+      resource_class: small
+      environment:
+        aws-access-key-id: AWS_ACCESS_KEY_ID
+        aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
+        AWS_REGION: us-east-1
+        IMAGE_VERSION: 2023-10-30
+        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-10-30-amd64 
+        IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
+
+
+commands:
+  #start_docker:
+  #  steps:
+  #    - run:
+  #        name: Start docker engine
+  #        command: |
+  #          sudo usermod -aG docker circleci_deploy
+  #          sudo chmod 666 /var/run/docker.sock
+  #          sudo systemctl restart docker 
+  #          sudo systemctl enable docker
+            
+
+  check_docker_versions:
+    steps:
+      - run:
+          name: Check docker versions
+          command: |
+            docker -v
+            docker compose -v
+
+  whats_running:
+    steps:
+      - run:
+          name: What's running?
+          command: docker ps
+
+  login_to_ecr:
+    steps:
+      - run:
+          name: ECR Login
+          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
+
+
+  install_aws_cli:
+    steps:
+      - run:
+          name: Install aws-cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+
+parameters:
+  collator_job:
+    type: boolean
+    default: false
+  jenkins_job:
+    type: boolean
+    default: false
+
+jobs:
+  collator_build:
+    executor: lambda-executor
+    working_directory: ~/project
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      - check_docker_versions 
+      - whats_running
+      - install_aws_cli
+      # - login_to_ecr
+
+      - run:
+          name: Build Lambda Docker Image
+          command: |
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
+          
+  collator_deploy:
+    executor: lambda-executor
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      # - login_to_ecr
+      - install_aws_cli
+
+      - run:
+          name: Log In to ECR
+          command: |
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
+
+      - run:
+          name: Push Image to ECR
+          command: |
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
+
+      - run:
+          name: Update AWS Lambda Function
+          command: |
+            AWS_REGION='us-east-1'
+            IMAGE_URI=481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+            IAM_ROLE_ARN=arn:aws:iam::481233474772:user/circleci_deploy
+          
+            aws lambda update-function \
+              --function-name s3_log_collation_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN \
+              --memory-size 4096
+
+  jenkins_build:
+    executor: lambda-executor
+    working_directory: ~/project
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      - check_docker_versions 
+      - whats_running
+      - install_aws_cli
+      # - login_to_ecr
+
+      - run:
+          name: Build Lambda Docker Image
+          command: |
+            docker build --file ./jenkins/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_jenkins-$IMAGE_VERSION-amd64 . 
+          
+  jenkins_deploy:
+    executor: lambda-executor
+    working_directory: ~/project
+    steps:
+      - shallow-checkout/checkout
+      - setup_remote_docker:
+          version: 20.10.24
+          docker_layer_caching: true  
+      
+      - check_docker_versions 
+      - whats_running
+      - install_aws_cli
+      - login_to_ecr
+
+      - run:
+          name: Push Image to ECR
+          command: |
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_jenkins-$IMAGE_VERSION-amd64      
+
+      - run:
+          name: Update AWS Lambda Function
+          command: |
+            # AWS_REGION='us-east-1'
+            # IMAGE_URI=481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_collator-$IMAGE_VERSION-amd64
+            # IAM_ROLE_ARN=arn:aws:iam::481233474772:role/test_lambda_role
+            echo "AWS_REGION: $AWS_REGION"
+            echo "IMAGE_URI: $IMAGE_URI"
+
+            aws lambda create-function \
+              --function-name s3_log_jenkins_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN \
+              --publish true \
+              --version 1 \
+              --memory-size 4096             
+              
+                         
+   
+workflows:
+  collator_job:
+    jobs:
+      - collator_build
+      - collator_deploy:
+          type: approval
+          requires:
+           - collator_build
+  
+  jenkins_job:
+    jobs:
+      - jenkins_build
+      - jenkins_deploy:
+          type: approval
+          requires:
+            - jenkins_build
+
+
+
+
+

@@ -1,0 +1,4 @@
+pandas[parquet]==2.0.3
+boto3==1.28.21
+pytest==7.4.0
+datadog-lambda

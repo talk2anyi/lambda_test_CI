@@ -122,10 +122,11 @@ jobs:
               --package-type Image \
               --code ImageUri=481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_2-amd64 \
               --role arn:aws:iam::481233474772:role/test_lambda_role \
+              --description "New collator lambda function" \ 
               # --publish true \
               # --function-version 1 \
               # --name DEV \
-              --description "collator lambda function" \             
+                          
               # --memory-size 512    
 
   jenkins_build:
@@ -163,6 +164,7 @@ jobs:
           docker_layer_caching: true  
 
       - install_aws_cli
+      - login_to_ecr
 
       - run:
           name: Create AWS Lambda Function
@@ -178,9 +180,7 @@ jobs:
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
               --role $IAM_ROLE_ARN \
-              --publish true \
-              --version 1 \
-              --memory-size 4096             
+                        
               
                          
    

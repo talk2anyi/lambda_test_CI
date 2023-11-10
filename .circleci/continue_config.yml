@@ -99,7 +99,7 @@ jobs:
               # --publish true \
               # --function-version 1 \
               # --name DEV \
-              --description "collator lambda function" \             
+              # --description collator lambda function \             
               # --memory-size 512      
 
 

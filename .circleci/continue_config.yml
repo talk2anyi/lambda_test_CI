@@ -88,19 +88,19 @@ jobs:
           command: |
             docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
 
-      - run:
-          name: Update AWS Lambda Function
-          command: |
-            aws lambda create-function \
-              --function-name s3_log_collation_v2_test \
-              --package-type Image \
-              --code ImageUri=$IMAGE_URI \
-              --role $IAM_ROLE_ARN \
-              # --publish true \
-              # --function-version 1 \
-              # --name DEV \
-              # --description collator lambda function \             
-              # --memory-size 512      
+#      - run:
+#          name: Update AWS Lambda Function
+#          command: |
+#            aws lambda create-function \
+#              --function-name s3_log_collation_v2_test \
+#              --package-type Image \
+#              --code ImageUri=$IMAGE_URI \
+#              --role $IAM_ROLE_ARN \
+#              # --publish true \
+#              # --function-version 1 \
+#              # --name DEV \
+#              # --description collator lambda function \             
+#              # --memory-size 512      
 
 
   collator_deploy:
@@ -118,16 +118,16 @@ jobs:
           name: Update AWS Lambda Function
           command: |
             aws lambda create-function \
-              --function-name s3_log_collation_v3_test \
+              --function-name s3_log_collation_v2_test \
               --package-type Image \
-              --code ImageUri=481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_2-amd64 \
-              --role arn:aws:iam::481233474772:role/test_lambda_role \
-              --description "New collator lambda function" \ 
+              --code ImageUri=$IMAGE_URI \
+              --role $IAM_ROLE_ARN \
               # --publish true \
               # --function-version 1 \
               # --name DEV \
-                          
-              # --memory-size 512    
+              # --description collator lambda function \             
+              # --memory-size 512   
+
 
   jenkins_build:
     executor: lambda-executor
@@ -190,7 +190,7 @@ workflows:
     jobs:
       - collator_build
       - collator_deploy:
-          type: approval
+          #type: approval
           requires:
            - collator_build
   

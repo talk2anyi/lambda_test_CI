@@ -117,20 +117,14 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            aws lambda update-function-code \
-              --function-name s3_log_collation_v2_test \
-              --code ImageUri=$IMAGE_URI \
-              --publish true 
+            aws lambda update-function-code --function-name s3_log_collation_v2_test --code ImageUri=$IMAGE_URI --publish true 
               #--role $IAM_ROLE_ARN \
               # --function-version 1 \
               # --name DEV \
               # --description collator lambda function \             
               # --memory-size 512 
 
-            aws lambda update-function-configuration \
-              --function-name s3_log_collation_v2_test \
-              --role $IAM_ROLE_ARN \
-              --description collator_lambda_function               
+            aws lambda update-function-configuration --function-name s3_log_collation_v2_test --role $IAM_ROLE_ARN --description collator_lambda_function               
               # --publish true \
               # --function-version 1 \
               # --name DEV \             

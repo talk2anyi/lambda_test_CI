@@ -102,7 +102,7 @@ jobs:
         default: "481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_4-amd64" 
       
       publish:
-        type:
+        type: string
         default: "true"
 
     steps:

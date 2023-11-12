@@ -92,19 +92,6 @@ jobs:
 
   collator_deploy:
     executor: lambda-executor
-    parameters:
-      function-name:
-        type: string
-        default: "s3_log_collation_v2_test"  
-
-      IMAGE_URI: 
-        type: string
-        default: "481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_4-amd64" 
-      
-      publish:
-        type: string
-        default: "true"
-
     steps:
       - shallow-checkout/checkout
       - install_aws_cli
@@ -127,14 +114,17 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            aws lambda update-function-code --function-name << parameters.function-name >> --code ImageUri= <<parameters.IMAGE_URI>> --publish << parameters.publish >> \
-              --role $IAM_ROLE_ARN 
+            aws lambda update-function-code \
+              --function-name s3_log_collation_v2_test \
+              --package-type Image \
+              --code ImageUri=$IMAGE_URI             
+              #  --role $IAM_ROLE_ARN 
               # --function-version 1 \
               # --name DEV \
               # --description collator lambda function \             
               # --memory-size 512 
 
-            aws lambda update-function-configuration --function-name s3_log_collation_v2_test --role $IAM_ROLE_ARN              
+           # aws lambda update-function-configuration --function-name s3_log_collation_v2_test --role $IAM_ROLE_ARN              
               # --publish true \
               # --function-version 1 \
               # --name DEV \             

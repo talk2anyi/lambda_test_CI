@@ -128,10 +128,7 @@ jobs:
               # --description collator lambda function \             
               # --memory-size 512 
 
-            aws lambda update-function-configuration --region us-east-1 \             
-              --publish  \
-              --memory-size 512 \
-              --function-name s3_log_collation_v2_test
+            aws lambda update-function-configuration --region us-east-1 --memory-size 512 --function-name s3_log_collation_v2_test       
               # --function-version 1 \
               # --name DEV \             
               # --memory-size 512 

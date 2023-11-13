@@ -11,11 +11,3 @@ COPY --from=public.ecr.aws/datadog/lambda-extension:latest /opt/extensions/ /opt
 ENV PYTHONPATH PYTHONPATH:${LAMBDA_TASK_ROOT}/src
 
 CMD ["datadog_lambda.handler.handler"]
-
-
-
-
-
-
-
-

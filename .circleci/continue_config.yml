@@ -97,7 +97,7 @@ jobs:
       - shallow-checkout/checkout
       - install_aws_cli
       - login_to_ecr
-      
+
 #      - run:
 #          name: Create AWS Lambda Function
 #          command: |
@@ -115,18 +115,20 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            aws lambda update-function-code --region us-east-1 \
-              --function-name s3_log_collation_v2_test \
-              --package-type Image \
-              --code ImageUri=$IMAGE_URI             
+            #aws lambda update-function-code --region us-east-1 \
+            #  --function-name s3_log_collation_v2_test \
+            #  --package-type Image \
+            #  --code ImageUri=$IMAGE_URI             
               #  --role $IAM_ROLE_ARN 
               # --function-version 1 \
               # --name DEV \
               # --description collator lambda function \             
               # --memory-size 512 
 
-           # aws lambda update-function-configuration --function-name s3_log_collation_v2_test --role $IAM_ROLE_ARN              
-              # --publish true \
+            aws lambda update-function-configuration --region us-east-1 \
+              --function-name s3_log_collation_v2_test \             
+              --publish  \
+              --memory-size 512 
               # --function-version 1 \
               # --name DEV \             
               # --memory-size 512 

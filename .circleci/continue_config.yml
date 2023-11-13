@@ -118,20 +118,10 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            #aws lambda update-function-code --region us-east-1 \
-            #  --function-name s3_log_collation_v2_test \
-            #  --package-type Image \
-            #  --code ImageUri=$IMAGE_URI             
-              #  --role $IAM_ROLE_ARN 
-              # --function-version 1 \
-              # --name DEV \
-              # --description collator lambda function \             
-              # --memory-size 512 
+            # aws lambda update-function-code --region us-east-1 --code ImageUri=$IMAGE_URI --description "collator lambda function" --publish true --function-name s3_log_collation_v2_test 
 
-            aws lambda update-function-configuration --region us-east-1 --memory-size 512 --function-name s3_log_collation_v2_test       
-              # --function-version 1 \
-              # --name DEV \             
-              # --memory-size 512 
+            aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test 
+              
 
 
   jenkins_build:

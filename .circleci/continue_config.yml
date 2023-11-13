@@ -5,6 +5,7 @@ orbs:
   # Third party orb: https://circleci.com/orbs/registry/orb/datacamp/shallow-checkout
   # (append ?version=0.0.3 to URL to view this version)
   shallow-checkout: datacamp/shallow-checkout@0.0.3
+  lambda: dosomething/lambda@0.0.4
   # Third party orb: https://circleci.com/developer/orbs/orb/circleci/aws-ecr
   # (append ?version=8.2.1 to URL to view this version)
   # aws-ecr: circleci/aws-ecr@8.2.1
@@ -96,7 +97,7 @@ jobs:
       - shallow-checkout/checkout
       - install_aws_cli
       - login_to_ecr
-
+      
 #      - run:
 #          name: Create AWS Lambda Function
 #          command: |
@@ -114,7 +115,7 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            aws lambda update-function-code \
+            aws lambda update-function-code --region us-east-1 \
               --function-name s3_log_collation_v2_test \
               --package-type Image \
               --code ImageUri=$IMAGE_URI             

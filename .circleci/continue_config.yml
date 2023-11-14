@@ -20,9 +20,13 @@ executors:
         aws-access-key-id: AWS_ACCESS_KEY_ID
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
-        IMAGE_VERSION: 2023-11-09_4
-        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_4-amd64 
+        IMAGE_VERSION: 2023-11-09_5
+        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_5-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
+
+    build_machine:
+      machine:
+        image: ubuntu-2204:2023.04.2
 
 
 commands:
@@ -70,7 +74,7 @@ parameters:
 
 jobs:
   collator_build:
-    executor: lambda-executor
+    executor: build_machine #lambda-executor
     working_directory: ~/project
     steps:
       - shallow-checkout/checkout
@@ -95,7 +99,7 @@ jobs:
 
 
   collator_deploy:
-    executor: lambda-executor
+    executor: build_machine #lambda-executor
     steps:
       - shallow-checkout/checkout
       - install_aws_cli
@@ -118,9 +122,17 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            # aws lambda update-function-code --region us-east-1 --code ImageUri=$IMAGE_URI --description "collator lambda function" --publish true --function-name s3_log_collation_v2_test 
+            aws lambda update-function-code --code ImageUri=$IMAGE_URI --description "collator lambda function" --function-name s3_log_collation_v2_test 
 
-            aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test 
+            #aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test  
+
+            aws lambda create-alias --function-version 1 --name Development --function-name s3_log_collation_v2_test 
+
+            aws lambda create-alias --function-version 1 --name Staging --function-name s3_log_collation_v2_test
+
+            aws lambda create-alias --function-version 1 --name Production --function-name s3_log_collation_v2_test
+
+            aws lambda publish-version --description "New published version" --function-name s3_log_collation_v2_test
               
 
 

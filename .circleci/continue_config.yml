@@ -99,7 +99,7 @@ jobs:
 
 
   collator_deploy:
-    executor: build_machine #lambda-executor
+    executor: lambda-executor
     steps:
       - shallow-checkout/checkout
       - install_aws_cli

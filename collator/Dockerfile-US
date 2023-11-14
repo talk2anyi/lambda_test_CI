@@ -12,3 +12,8 @@ ENV PYTHONPATH PYTHONPATH:${LAMBDA_TASK_ROOT}/src
 
 CMD ["datadog_lambda.handler.handler"]
 
+
+
+
+
+

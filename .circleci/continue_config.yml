@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Push Image to ECR
           command: |
-            #IMAGE_VERSION=$(date +"%Y-%m-%d")
+            IMAGE_VERSION=$(date +"%Y-%m-%d")
             docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64
 
 

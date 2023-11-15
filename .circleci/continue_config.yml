@@ -5,7 +5,6 @@ orbs:
   # Third party orb: https://circleci.com/orbs/registry/orb/datacamp/shallow-checkout
   # (append ?version=0.0.3 to URL to view this version)
   shallow-checkout: datacamp/shallow-checkout@0.0.3
-  lambda: dosomething/lambda@0.0.4
   # Third party orb: https://circleci.com/developer/orbs/orb/circleci/aws-ecr
   # (append ?version=8.2.1 to URL to view this version)
   # aws-ecr: circleci/aws-ecr@8.2.1
@@ -20,13 +19,10 @@ executors:
         aws-access-key-id: AWS_ACCESS_KEY_ID
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
-        IMAGE_VERSION: 2023-11-09_5
+        #IMAGE_VERSION: 2023-11-09_5
         IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_5-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
 
-    build_machine:
-      machine:
-        image: ubuntu-2204:2023.04.2
 
 
 commands:
@@ -48,7 +44,7 @@ commands:
     steps:
       - run:
           name: ECR Login
-          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
+          command: aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com            
 
 
   install_aws_cli:
@@ -90,12 +86,14 @@ jobs:
       - run:
           name: Build Lambda Docker Image
           command: |
-            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64 . 
+            IMAGE_VERSION=$(date +"%Y-%m-%d%H%M")
+            echo ${IMAGE_VERSION}
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64 . 
 
       - run:
           name: Push Image to ECR
           command: |
-            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-$IMAGE_VERSION-amd64
+            docker push 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64
 
 
   collator_deploy:
@@ -122,17 +120,11 @@ jobs:
       - run:
           name: Update AWS Lambda Function
           command: |
-            aws lambda update-function-code --image-uri $IMAGE_URI --function-name s3_log_collation_v2_test 
+            aws lambda update-function-code --image-uri ${IMAGE_URI} --function-name s3_log_collation_v2_test 
 
             #aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test  
 
-            aws lambda create-alias --function-version 1 --name Development --function-name s3_log_collation_v2_test 
-
-            aws lambda create-alias --function-version 1 --name Staging --function-name s3_log_collation_v2_test
-
-            aws lambda create-alias --function-version 1 --name Production --function-name s3_log_collation_v2_test
-
-            aws lambda publish-version --description "New published version" --function-name s3_log_collation_v2_test
+            aws lambda publish-version --description "Test V3" --function-name s3_log_collation_v2_test
               
 
 
@@ -196,10 +188,13 @@ workflows:
     when: << pipeline.parameters.collator_job >>
     jobs:
       - collator_build
-      - collator_deploy:
-          #type: approval
+      - hold:
+          type: approval
           requires:
-           - collator_build
+            - collator_build
+      - collator_deploy:
+          requires:
+           - hold
   
   jenkins_job:
     when: << pipeline.parameters.jenkins_job >>

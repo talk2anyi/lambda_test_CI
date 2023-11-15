@@ -20,9 +20,9 @@ executors:
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
         #IMAGE_VERSION: 2023-11-09_5
-        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_5-amd64 
+        #IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_5-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
-        
+        #tag: ${CIRCLE_SHA1}
 
 
 
@@ -104,6 +104,14 @@ jobs:
       - shallow-checkout/checkout
       - install_aws_cli
       - login_to_ecr
+
+      - run:
+          name: Set Docker Image URI
+          command: |
+            export IMAGE_URI=$(aws ecr describe-images --repository-name 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images --region $AWS_REGION --query 'images | sort_by(@, &imagePushedAt) | [-1].imageUri' --output text)
+            echo "export IMAGE_URI=$IMAGE_URI" >> $BASH_ENV
+          environment:
+            IMAGE_URI: $IMAGE_URI
 
 #      - run:
 #          name: Create AWS Lambda Function
@@ -189,14 +197,14 @@ workflows:
   collator_job:
     when: << pipeline.parameters.collator_job >>
     jobs:
-      - collator_build
-      - hold:
-          type: approval
-          requires:
-            - collator_build
-      - collator_deploy:
-          requires:
-           - hold
+      #- collator_build
+      #- hold:
+      #    type: approval
+      #    requires:
+      #      - collator_build
+      - collator_deploy
+          #requires:
+          # - hold
   
   jenkins_job:
     when: << pipeline.parameters.jenkins_job >>

@@ -44,7 +44,7 @@ commands:
     steps:
       - run:
           name: ECR Login
-          command: aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com            
+          command: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com            
 
 
   install_aws_cli:
@@ -86,14 +86,14 @@ jobs:
       - run:
           name: Build Lambda Docker Image
           command: |
-            IMAGE_VERSION=$(date +"%Y-%m-%d%H%M")
+            IMAGE_VERSION=$(date +"%Y-%m-%d-%H-%M")
             echo ${IMAGE_VERSION}
-            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64 . 
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag "481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64" . 
 
       - run:
           name: Push Image to ECR
           command: |
-            docker push 481233474772.dkr.ecr.${AWS_REGION}.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64
 
 
   collator_deploy:

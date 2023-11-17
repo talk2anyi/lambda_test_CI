@@ -20,7 +20,7 @@ executors:
         aws-secret-access-key: AWS_SECRET_ACCESS_KEY   
         AWS_REGION: us-east-1
         #IMAGE_VERSION: 2023-11-09_5
-        #IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-2023-11-09_5-amd64 
+        IMAGE_URI: 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-${CIRCLE_SHA1}-amd64 
         IAM_ROLE_ARN: arn:aws:iam::481233474772:role/test_lambda_role
         #tag: ${CIRCLE_SHA1}
 
@@ -105,14 +105,6 @@ jobs:
       - install_aws_cli
       - login_to_ecr
 
-      - run:
-          name: Set Docker Image URI
-          command: |
-            export IMAGE_URI=$(aws ecr describe-images --repository-name lambda_images --region $AWS_REGION --query 'images | sort_by(@, &imagePushedAt) | [-1].imageUri' --output text)
-            echo "export IMAGE_URI=$IMAGE_URI" >> $BASH_ENV
-          environment:
-            IMAGE_URI: $IMAGE_URI
-
 #      - run:
 #          name: Create AWS Lambda Function
 #          command: |
@@ -134,7 +126,7 @@ jobs:
 
             #aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test  
 
-            aws lambda publish-version --description "Test V3" --function-name s3_log_collation_v2_test
+            aws lambda publish-version --description "Test V5" --function-name s3_log_collation_v2_test
               
 
 

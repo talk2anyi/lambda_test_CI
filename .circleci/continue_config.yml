@@ -149,7 +149,7 @@ jobs:
       - run:
           name: Update AWS Lambda Image
           command: |
-            aws lambda update-alias --function-version $LATEST_VERSION --name Production --function-name s3_log_collation_v2_test 
+            aws lambda update-alias --function-version "$LATEST_VERSION" --name Production --function-name s3_log_collation_v2_test 
     
 
 

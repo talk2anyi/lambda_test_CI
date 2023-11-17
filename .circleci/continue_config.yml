@@ -87,15 +87,15 @@ jobs:
       - run:
           name: Build Lambda Docker Image
           command: |
-            IMAGE_VERSION=$(date +"%Y-%m-%d")
-            echo ${IMAGE_VERSION}
-            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag "481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64" . 
+            #IMAGE_VERSION=$(date +"%Y-%m-%d")
+            #echo ${IMAGE_VERSION}
+            docker build --file ./collator/Dockerfile-US --platform linux/amd64 --tag "481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${CIRCLE_SHA1}-amd64" . 
 
       - run:
           name: Push Image to ECR
           command: |
-            IMAGE_VERSION=$(date +"%Y-%m-%d")
-            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${IMAGE_VERSION}-amd64
+            #IMAGE_VERSION=$(date +"%Y-%m-%d")
+            docker push 481233474772.dkr.ecr.$AWS_REGION.amazonaws.com/lambda_images:lambda_test_collator-${CIRCLE_SHA1}-amd64
 
 
   collator_deploy:
@@ -108,7 +108,7 @@ jobs:
       - run:
           name: Set Docker Image URI
           command: |
-            export IMAGE_URI=$(aws ecr describe-images --repository-name 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images --region $AWS_REGION --query 'images | sort_by(@, &imagePushedAt) | [-1].imageUri' --output text)
+            export IMAGE_URI=$(aws ecr describe-images --repository-name lambda_images --region $AWS_REGION --query 'images | sort_by(@, &imagePushedAt) | [-1].imageUri' --output text)
             echo "export IMAGE_URI=$IMAGE_URI" >> $BASH_ENV
           environment:
             IMAGE_URI: $IMAGE_URI
@@ -197,14 +197,14 @@ workflows:
   collator_job:
     when: << pipeline.parameters.collator_job >>
     jobs:
-      #- collator_build
-      #- hold:
-      #    type: approval
-      #    requires:
-      #      - collator_build
-      - collator_deploy
-          #requires:
-          # - hold
+      - collator_build
+      - hold:
+          type: approval
+          requires:
+            - collator_build
+      - collator_deploy:
+          requires:
+           - hold
   
   jenkins_job:
     when: << pipeline.parameters.jenkins_job >>

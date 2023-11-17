@@ -120,12 +120,16 @@ jobs:
               # --memory-size 512   
 
       - run:
-          name: Update AWS Lambda Image
+          name: Update Lambda Image
           command: |
             aws lambda update-function-code --image-uri 481233474772.dkr.ecr.us-east-1.amazonaws.com/lambda_images:lambda_test_collator-${CIRCLE_SHA1}-amd64 --function-name s3_log_collation_v2_test && \
 
             #aws lambda update-function-configuration --memory-size 256 --description "collator lambda function" --function-name s3_log_collation_v2_test  
             #aws lambda function-updated --qualifier Staging --function-name s3_log_collation_v2_test
+            
+      - run:
+          name: Publish lambda version
+          command: |
             aws lambda publish-version --description "Test V6" --function-name s3_log_collation_v2_test
 
   

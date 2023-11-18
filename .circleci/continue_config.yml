@@ -214,21 +214,21 @@ workflows:
   collator_job:
     when: << pipeline.parameters.collator_job >>
     jobs:
-      #- collator_build
-      #- collator_staging_deploy_approval:
-      #    type: approval
-      #    requires:
-      #      - collator_build
-      - collator_deploy_staging
-      #    requires:
-      #     - collator_staging_deploy_approval
-      #- collator_production_deploy_approval:
-      #        type: approval
-      #        requires:
-      #          - collator_deploy_staging
-      - collator_deploy_production
-        #  requires:
-        #   - collator_production_deploy_approval
+      - collator_build
+      - collator_staging_deploy_approval:
+          type: approval
+          requires:
+            - collator_build
+      - collator_deploy_staging:
+          requires:
+           - collator_staging_deploy_approval
+      - collator_production_deploy_approval:
+              type: approval
+              requires:
+                - collator_deploy_staging
+      - collator_deploy_production:
+          requires:
+           - collator_production_deploy_approval
 
   
   jenkins_job:
